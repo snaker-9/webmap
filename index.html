@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+
+<HTML lang=es>
+<head>
+    <meta charset="UTF-8">
+<title>Proyecto Practicum Mapa</title>
+    <style>
+        h2{
+            font-family: sans-serif;
+            
+             color: rgb(46, 190, 184);
+           
+           // background-color: burlywood;
+            padding: 1px;
+            text-align: center;
+             
+            
+        }
+        #map{
+      
+            height:100%;
+            
+            
+            border-color: #0e647e;
+            
+        
+          
+        }
+        html,
+      body {
+        height: 100%;
+      
+        
+          background-color: black
+      }
+        #infor{
+            width: 400px;
+            height: 400px;
+            float:left;
+        }
+    </style>
+<!--IMPORTANTE RESPETAR EL ORDEN -->
+<!--ESTILOS DE BOOSTRAP -->
+<!--ARCHIVOS JAVASCRIPT DE BOOTSTRAP<script type="text/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js" ></script>-->
+
+ <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" ></script>
+
+
+
+<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+ 
+ <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBsC3FWfDekMi1UP--kb63j_onYJft_ISI&callback=initMap"
+      defer
+    ></script>
+    
+
+    <script >
+
+    //VARIABLES GENERALES
+		//declaras fuera del ready de jquery
+    var nuevos_marcadores = [];
+    var marcadores_bd= [];
+   var mapa = null; //VARIABLE GENERAL PARA EL MAPA
+    //FUNCION PARA QUITAR MARCADORES DE MAPA
+  
+   //var punto = new google.maps.LatLng(-13.163622,-72.545926);
+ 
+    
+   
+      
+                 
+ 
+
+  
+  
+     
+     
+ 
+  
+        function initMap() {
+  const myLatLng = {
+    lat: -13.163622,
+    lng: -72.545926
+  };
+   mapa = new google.maps.Map(document.getElementById("map"), {
+    zoom: 4,
+    center: myLatLng,
+    fullscreenControl: true,
+    zoomControl: true,
+    mapTypeId:  google.maps.MapTypeId.HYBRID,
+    streetViewControl: false,
+    gestureHandling: "greedy"
+    
+  });
+        }
+
+       listar2();
+       
+        
+
+   
+     
+      
+    function listar()
+    {
+        //ANTES DE LISTAR MARCADORES
+        //SE DEBEN QUITAR LOS ANTERIORES DEL MAPA
+        
+       $.ajax({
+               type:"POST",
+               url:"iajax.php",
+               dataType:"JSON",
+               data:"&tipo=listar",
+               success:function(data){
+                   if(data.estado=="ok")
+                    {//alert("Hay puntos en la BD")
+                   $.each(data.mensaje, function(i, item){
+                       ;
+                       var posi =new google.maps.LatLng(item.cx, item.cy);
+                     const infowindow = new google.maps.InfoWindow({
+                         content: item.Titulo, });
+
+                        var marker =new google.maps.Marker({
+                            animation: google.maps.Animation.DROP,
+                            idMarcador:item.IdPunto,
+                                position:posi,  
+                                title:item.Titulo,
+                               // titulo: item.Titulo,
+                                cx:item.cx,
+                                cy:item.cy
+                             
+                       });
+              
+                       
+                       marker.addListener("click", () => {
+                             infowindow.open(mapa, marker);
+                           //marker.setAnimation(google.maps.Animation.BOUNCE);
+                            
+                              });
+                        
+
+                        marcadores_bd.push(marker);
+                        marker.setMap(mapa);
+                   });   
+                            
+      
+      
+                    }
+                else
+                    {
+                        alert("NO hay puntos en la BD");
+                    }
+               },
+               beforeSend:function(){
+                   
+               },
+               complete:function(){
+                   
+               }
+           });
+    }
+    
+    
+    function listar2()
+    {
+       
+       var icon = 'icon/ic2.png';
+       
+       $.ajax({
+               type:"POST",
+               url:"iajax.php",
+               dataType:"JSON",
+               data:"&tipo=listarcord",
+               success:function(data){
+                   if(data.estado=="ok")
+                    {  
+                        //alert("Hay puntos en la BD");
+                        
+                   $.each(data.mensaje, function(i, item){
+
+                var posi =new google.maps.LatLng(item.latitud, item.longitud);
+                       var datos = ("<b>CI: </b>"+item.DNI 
+                       +"<br> <b>Nombres</b> : "+ item.nombres
+                       +"<br> <b>Telefon/cel :</b>  "+item.telefono
+                       +"<br> <b> Direccion:</b>"+item.direccion
+                       + "<br><b>Edad :</b> "+item.edad
+                       + "<br><b> Sexo :</b>"+item.sexo);
+                     const infowindow = new google.maps.InfoWindow({
+                        
+                          content: datos, });
+                        // content: "NOMBRES:"+item.nombres, });
+
+                        var marker =new google.maps.Marker({
+                            animation: google.maps.Animation.DROP,
+                            idMarcador:item.IdPunto,
+                                position:posi,  
+                                title:item.idPersona,
+                                icon:icon
+                               // titulo: item.Titulo,
+                               
+                             
+                       });
+                       //Eventos mouse
+                          //  marker.addListener("click", () => {
+                            
+                           //  infowindow.open(mapa, marker);
+                             // });
+                       
+                       marker.addListener("mouseover", () => {
+                             infowindow.open(mapa, marker);
+                            if (marker.getAnimation() == null) {
+                                 marker.setAnimation(google.maps.Animation.BOUNCE);
+                                } 
+                                    
+                         
+                             
+                              });
+                              
+                            marker.addListener("mouseout", () => {
+                                infowindow.close();
+                               
+                           marker.setAnimation(null);
+                                 
+                             
+                              });
+
+                        marcadores_bd.push(marker);
+                        marker.setMap(mapa);
+                   });   
+      
+      
+                    }
+                else
+                    {
+                        alert("NO hay puntos en la BD");
+                    }
+               },
+               beforeSend:function(){
+                   
+               },
+               complete:function(){
+                   
+               }
+           });
+    }
+   //PLANTILLA AJAX
+ 
+  if (marker.getAnimation() !== null) {
+    marker.setAnimation(null);
+  } else {
+    marker.setAnimation(google.maps.Animation.BOUNCE);
+  }
+</script>
+</head>
+<body>
+    <h2><img src="icon/ic.png">Mapa de Contagios <img src="icon/ic.png">  </h2>
+    <div id="map">
+        <h2>Aquí ira el mapa!</h2>
+        </div>
+    
+</body>
+</HTML>
